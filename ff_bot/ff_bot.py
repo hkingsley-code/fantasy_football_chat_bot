@@ -4,7 +4,7 @@ import os
 import random
 from datetime import date
 from apscheduler.schedulers.blocking import BlockingScheduler
-from espn_api.football import League
+from espn_api.baseball import League
 
 
 class GroupMeException(Exception):
