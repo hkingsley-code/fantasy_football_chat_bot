@@ -116,9 +116,9 @@ def get_random_phrase():
     return [random.choice(phrases)]
 
 
-def get_scoreboard_short(league, week=None):
+def get_scoreboard_short(league,  matchupPeriod=None):
     # Gets current week's scoreboard
-    box_scores = league.box_scores(week=week)
+    box_scores = league.box_scores( matchup_period= matchupPeriod)
     score = ['%s %.2f - %.2f %s' % (i.home_team.team_abbrev, i.home_score,
                                     i.away_score, i.away_team.team_abbrev) for i in box_scores
              if i.away_team]
@@ -126,9 +126,9 @@ def get_scoreboard_short(league, week=None):
     return '\n'.join(text)
 
 
-def get_projected_scoreboard(league, week=None):
+def get_projected_scoreboard(league,  matchupPeriod=None):
     # Gets current week's scoreboard projections
-    box_scores = league.box_scores(week=week)
+    box_scores = league.box_scores( matchup_period= matchupPeriod)
     score = ['%s %.2f - %.2f %s' % (i.home_team.team_abbrev, get_projected_total(i.home_lineup),
                                     get_projected_total(i.away_lineup), i.away_team.team_abbrev) for i in box_scores
              if i.away_team]
@@ -136,7 +136,7 @@ def get_projected_scoreboard(league, week=None):
     return '\n'.join(text)
 
 
-def get_standings(league, top_half_scoring, week=None):
+def get_standings(league, top_half_scoring,  matchupPeriod=None):
     standings_txt = ''
     teams = league.teams
     standings = []
@@ -146,9 +146,9 @@ def get_standings(league, top_half_scoring, week=None):
                          pos, team in enumerate(standings)]
     else:
         top_half_totals = {t.team_name: 0 for t in teams}
-        if not week:
-            week = league.current_week
-        for w in range(1, week):
+        if not  matchupPeriod:
+            matchupPeriod = league.currentMatchupPeriod
+        for w in range(1,  matchupPeriod):
             top_half_totals = top_half_wins(league, top_half_totals, w)
 
         for t in teams:
@@ -163,8 +163,8 @@ def get_standings(league, top_half_scoring, week=None):
     return "\n".join(text)
 
 
-def top_half_wins(league, top_half_totals, week):
-    box_scores = league.box_scores(week=week)
+def top_half_wins(league, top_half_totals,  matchupPeriod):
+    box_scores = league.box_scores( matchup_period= matchupPeriod)
 
     scores = [(i.home_score, i.home_team.team_name) for i in box_scores] + \
         [(i.away_score, i.away_team.team_name) for i in box_scores if i.away_team]
@@ -258,9 +258,9 @@ def scan_inactives(lineup, team):
     return inactives
 
 
-def get_matchups(league, random_phrase, week=None):
+def get_matchups(league, random_phrase,  matchupPeriod=None):
     # Gets current week's Matchups
-    matchups = league.box_scores(week=week)
+    matchups = league.box_scores( matchup_period= matchupPeriod)
 
     score = ['%s(%s-%s) vs %s(%s-%s)' % (i.home_team.team_name, i.home_team.wins, i.home_team.losses,
                                          i.away_team.team_name, i.away_team.wins, i.away_team.losses) for i in matchups
@@ -272,9 +272,9 @@ def get_matchups(league, random_phrase, week=None):
     return '\n'.join(text)
 
 
-def get_close_scores(league, week=None):
+def get_close_scores(league,  matchupPeriod=None):
     # Gets current closest scores (15.999 points or closer)
-    matchups = league.box_scores(week=week)
+    matchups = league.box_scores( matchup_period= matchupPeriod)
     score = []
 
     for i in matchups:
@@ -334,23 +334,23 @@ def get_waiver_report(league, faab):
     return '\n'.join(text)
 
 
-def get_power_rankings(league, week=None):
+def get_power_rankings(league,  matchupPeriod=None):
     # power rankings requires an integer value, so this grabs the current week for that
-    if not week:
-        week = league.current_week
+    if not  matchupPeriod:
+         matchupPeriod = league.currentMatchupPeriod
     # Gets current week's power rankings
     # Using 2 step dominance, as well as a combination of points scored and margin of victory.
     # It's weighted 80/15/5 respectively
-    power_rankings = league.power_rankings(week=week)
+    power_rankings = league.power_rankings( matchupPeriod= matchupPeriod)
 
     score = ['%s (%.1f) - %s' % (i[0], i[1].playoff_pct, i[1].team_name) for i in power_rankings
             if i]
     text = ['Power Rankings (Playoff %)'] + score
     return '\n'.join(text)
 
-def get_trophies(league, week=None):
+def get_trophies(league,  matchupPeriod=None):
     # Gets trophies for highest score, lowest score, closest score, and biggest win
-    matchups = league.box_scores(week=week)
+    matchups = league.box_scores( matchup_period= matchupPeriod)
     low_score = 9999
     low_team_name = ''
     high_score = -1
@@ -548,9 +548,9 @@ def bot_main(function):
             text += '\n\n' + get_waiver_report(league, faab)
     elif function == "get_final":
         # on Tuesday we need to get the scores of last week
-        week = league.current_week - 1
-        text = "Final " + get_scoreboard_short(league, week=week)
-        text = text + "\n\n" + get_trophies(league, week=week)
+        week = league.currentMatchupPeriod - 1
+        text = "Final " + get_scoreboard_short(league,  matchupPeriod= matchupPeriod)
+        text = text + "\n\n" + get_trophies(league,  matchupPeriod= matchupPeriod)
     elif function == "get_waiver_report" and swid != '{1}' and espn_s2 != '1':
         text = get_waiver_report(league, faab)
     elif function == "init":
@@ -615,36 +615,37 @@ if __name__ == '__main__':
     # score update:                       sunday at 4pm, 8pm east coast time.
 
     sched.add_job(bot_main, 'cron', ['get_close_scores'], id='close_scores',
-                  day_of_week='mon', hour=18, minute=30, start_date=ff_start_date, end_date=ff_end_date,
+                  day_of_week='wed', hour=12, minute=20, start_date=ff_start_date, end_date=ff_end_date,
                   timezone=game_timezone, replace_existing=True)
-    sched.add_job(bot_main, 'cron', ['get_power_rankings'], id='power_rankings',
-                  day_of_week='tue', hour=18, minute=30, start_date=ff_start_date, end_date=ff_end_date,
-                  timezone=my_timezone, replace_existing=True)
+    # not supported by baseball api 
+    #sched.add_job(bot_main, 'cron', ['get_power_rankings'], id='power_rankings',
+    #              day_of_week='tue', hour=18, minute=30, start_date=ff_start_date, end_date=ff_end_date,
+    #              timezone=my_timezone, replace_existing=True)
     sched.add_job(bot_main, 'cron', ['get_final'], id='final',
-                  day_of_week='tue', hour=7, minute=30, start_date=ff_start_date, end_date=ff_end_date,
+                  day_of_week='wed', hour=12, minute=20, start_date=ff_start_date, end_date=ff_end_date,
                   timezone=my_timezone, replace_existing=True)
     sched.add_job(bot_main, 'cron', ['get_standings'], id='standings',
-                    day_of_week='wed', hour=7, minute=30, start_date=ff_start_date, end_date=ff_end_date,
+                    day_of_week='wed', hour=12, minute=20, start_date=ff_start_date, end_date=ff_end_date,
                     timezone=my_timezone, replace_existing=True)
     if daily_waiver:
         sched.add_job(bot_main, 'cron', ['get_waiver_report'], id='waiver_report',
-                      day_of_week='mon, tue, thu, fri, sat, sun', hour=7, minute=31, start_date=ff_start_date, end_date=ff_end_date,
+                      day_of_week='wed, tue, thu, fri, sat, sun', hour=12, minute=20, start_date=ff_start_date, end_date=ff_end_date,
                       timezone=my_timezone, replace_existing=True)
 
     sched.add_job(bot_main, 'cron', ['get_matchups'], id='matchups',
-                  day_of_week='thu', hour=19, minute=30, start_date=ff_start_date, end_date=ff_end_date,
+                  day_of_week='wed', hour=12, minute=20, start_date=ff_start_date, end_date=ff_end_date,
                   timezone=game_timezone, replace_existing=True)
     sched.add_job(bot_main, 'cron', ['get_scoreboard_short'], id='scoreboard1',
-                  day_of_week='fri,mon', hour=7, minute=30, start_date=ff_start_date, end_date=ff_end_date,
+                  day_of_week='fri,wed', hour=12, minute=20, start_date=ff_start_date, end_date=ff_end_date,
                   timezone=my_timezone, replace_existing=True)
 
-    if monitor_report:
-        sched.add_job(bot_main, 'cron', ['get_monitor'], id='monitor',
-                    day_of_week='sun', hour=7, minute=30, start_date=ff_start_date, end_date=ff_end_date,
-                    timezone=my_timezone, replace_existing=True)
+  #  if monitor_report:
+  #      sched.add_job(bot_main, 'cron', ['get_monitor'], id='monitor',
+  #                  day_of_week='sun', hour=7, minute=30, start_date=ff_start_date, end_date=ff_end_date,
+  #                  timezone=my_timezone, replace_existing=True)
 
     sched.add_job(bot_main, 'cron', ['get_scoreboard_short'], id='scoreboard2',
-                  day_of_week='sun', hour='16,20', start_date=ff_start_date, end_date=ff_end_date,
+                  day_of_week='wed', hour='12,13', start_date=ff_start_date, end_date=ff_end_date,
                   timezone=game_timezone, replace_existing=True)
 
     print("Ready!")
