@@ -531,7 +531,7 @@ def bot_main(function):
         text = get_monitor(league)
     elif function == "get_scoreboard_short":
         text = get_scoreboard_short(league)
-        text = text + "\n\n" + get_projected_scoreboard(league)
+      #  text = text + "\n\n" + get_projected_scoreboard(league)
     elif function == "get_projected_scoreboard":
         text = get_projected_scoreboard(league)
     elif function == "get_close_scores":
@@ -548,7 +548,7 @@ def bot_main(function):
             text += '\n\n' + get_waiver_report(league, faab)
     elif function == "get_final":
         # on Tuesday we need to get the scores of last week
-        week = league.currentMatchupPeriod - 1
+        matchupPeriod = league.currentMatchupPeriod - 1
         text = "Final " + get_scoreboard_short(league,  matchupPeriod= matchupPeriod)
         text = text + "\n\n" + get_trophies(league,  matchupPeriod= matchupPeriod)
     elif function == "get_waiver_report" and swid != '{1}' and espn_s2 != '1':
@@ -615,28 +615,28 @@ if __name__ == '__main__':
     # score update:                       sunday at 4pm, 8pm east coast time.
 
     sched.add_job(bot_main, 'cron', ['get_close_scores'], id='close_scores',
-                  day_of_week='wed', hour=12, minute=20, start_date=ff_start_date, end_date=ff_end_date,
+                  day_of_week='wed', hour=12, minute=35, start_date=ff_start_date, end_date=ff_end_date,
                   timezone=game_timezone, replace_existing=True)
     # not supported by baseball api 
     #sched.add_job(bot_main, 'cron', ['get_power_rankings'], id='power_rankings',
     #              day_of_week='tue', hour=18, minute=30, start_date=ff_start_date, end_date=ff_end_date,
     #              timezone=my_timezone, replace_existing=True)
     sched.add_job(bot_main, 'cron', ['get_final'], id='final',
-                  day_of_week='wed', hour=12, minute=20, start_date=ff_start_date, end_date=ff_end_date,
+                  day_of_week='wed', hour=12, minute=35, start_date=ff_start_date, end_date=ff_end_date,
                   timezone=my_timezone, replace_existing=True)
     sched.add_job(bot_main, 'cron', ['get_standings'], id='standings',
-                    day_of_week='wed', hour=12, minute=20, start_date=ff_start_date, end_date=ff_end_date,
+                    day_of_week='wed', hour=12, minute=35, start_date=ff_start_date, end_date=ff_end_date,
                     timezone=my_timezone, replace_existing=True)
     if daily_waiver:
         sched.add_job(bot_main, 'cron', ['get_waiver_report'], id='waiver_report',
-                      day_of_week='wed, tue, thu, fri, sat, sun', hour=12, minute=20, start_date=ff_start_date, end_date=ff_end_date,
+                      day_of_week='wed, tue, thu, fri, sat, sun', hour=12, minute=35, start_date=ff_start_date, end_date=ff_end_date,
                       timezone=my_timezone, replace_existing=True)
 
     sched.add_job(bot_main, 'cron', ['get_matchups'], id='matchups',
-                  day_of_week='wed', hour=12, minute=20, start_date=ff_start_date, end_date=ff_end_date,
+                  day_of_week='wed', hour=12, minute=35, start_date=ff_start_date, end_date=ff_end_date,
                   timezone=game_timezone, replace_existing=True)
     sched.add_job(bot_main, 'cron', ['get_scoreboard_short'], id='scoreboard1',
-                  day_of_week='fri,wed', hour=12, minute=20, start_date=ff_start_date, end_date=ff_end_date,
+                  day_of_week='fri,wed', hour=12, minute=35, start_date=ff_start_date, end_date=ff_end_date,
                   timezone=my_timezone, replace_existing=True)
 
   #  if monitor_report:
