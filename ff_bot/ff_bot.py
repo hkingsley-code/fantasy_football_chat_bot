@@ -398,9 +398,51 @@ def get_trophies(league,  matchupPeriod=None):
     close_score_str = ['%s barely beat %s by a margin of %.2f' % (close_winner, close_loser, closest_score)]
     blowout_str = ['%s blown out by %s by a margin of %.2f' % (blown_out_team_name, ownerer_team_name, biggest_blowout)]
 
-    text = ['Trophies of the week:'] + low_score_str + high_score_str + close_score_str + blowout_str
+    text = ['Brent Sucks. Here are the trophies of the week:'] + low_score_str + high_score_str + close_score_str + blowout_str
     return '\n'.join(text)
-
+def get_batter_points(league,  matchupPeriod=None):
+  matchups = league.box_scores( matchup_period= matchupPeriod)
+  espn_matchup = matchupPeriod + 15
+  for i in matchups:
+    home_team = i.home_team
+    away_team = i.away_team
+    home_team_name = i.home_team.team_name
+    away_team_name = i.away_team.team_name
+    p_points = 0 
+    h_points = 0
+    best_hitting_name = ''
+    worst_hitting_name = ''
+    best_hitting_points = 0
+    worst_hitting_points = 999
+    for y in home_team.roster:
+      if y.lineupSlot == 'SP' or y.lineupSlot == 'RP':  
+          p_points += y.stats[espn_matchup]['points']
+      else: 
+          h_points += y.stats[espn_matchup]['points']
+    if h_points > best_hitting_points: 
+      best_hitting_points = h_points
+      best_hitting_name = home_team_name
+    if h_points < worst_hitting_points:
+      worst_hitting_points = h_points
+      worst_hitting_name = home_team_name
+    p_points = 0 
+    h_points = 0
+    for y in away_team.roster:
+       if y.lineupSlot == 'SP' or y.lineupSlot == 'RP':  
+          p_points += y.stats[espn_matchup]['points']
+       else: 
+          h_points += y.stats[espn_matchup]['points']
+    if h_points > best_hitting_points: 
+      best_hitting_points = h_points
+      best_hitting_name = away_team_name
+    if h_points < worst_hitting_points:
+      worst_hitting_points = h_points
+      worst_hitting_name = away_team_name
+  low_score_str = ['worst hitting: %s with %.2f points' % (worst_hitting_name, worst_hitting_points)]
+  high_score_str = ['besthitting: %s with %.2f points' % (best_hitting_name, best_hitting_points)]
+  text = ['Trophies of the week:'] + low_score_str + high_score_str
+  return '\n'.join(text)     
+  
 
 def str_to_bool(check):
     return check.lower() in ("yes", "true", "t", "1")
@@ -526,7 +568,7 @@ def bot_main(function):
     text = ''
     if function == "get_matchups":
         text = get_matchups(league, random_phrase)
-        text = text + "\n\n" + get_projected_scoreboard(league)
+       # text = text + "\n\n" + get_projected_scoreboard(league)
     elif function == "get_monitor":
         text = get_monitor(league)
     elif function == "get_scoreboard_short":
@@ -615,38 +657,39 @@ if __name__ == '__main__':
     # score update:                       sunday at 4pm, 8pm east coast time.
 
     sched.add_job(bot_main, 'cron', ['get_close_scores'], id='close_scores',
-                  day_of_week='wed', hour=12, minute=35, start_date=ff_start_date, end_date=ff_end_date,
+                  day_of_week='fri', hour=12, minute=00, start_date=ff_start_date, end_date=ff_end_date,
                   timezone=game_timezone, replace_existing=True)
     # not supported by baseball api 
     #sched.add_job(bot_main, 'cron', ['get_power_rankings'], id='power_rankings',
     #              day_of_week='tue', hour=18, minute=30, start_date=ff_start_date, end_date=ff_end_date,
     #              timezone=my_timezone, replace_existing=True)
     sched.add_job(bot_main, 'cron', ['get_final'], id='final',
-                  day_of_week='wed', hour=12, minute=35, start_date=ff_start_date, end_date=ff_end_date,
+                  day_of_week='mon', hour=7, minute=00, start_date=ff_start_date, end_date=ff_end_date,
                   timezone=my_timezone, replace_existing=True)
     sched.add_job(bot_main, 'cron', ['get_standings'], id='standings',
-                    day_of_week='wed', hour=12, minute=35, start_date=ff_start_date, end_date=ff_end_date,
+                    day_of_week='mon', hour=7, minute=01, start_date=ff_start_date, end_date=ff_end_date,
                     timezone=my_timezone, replace_existing=True)
-    if daily_waiver:
-        sched.add_job(bot_main, 'cron', ['get_waiver_report'], id='waiver_report',
-                      day_of_week='wed, tue, thu, fri, sat, sun', hour=12, minute=35, start_date=ff_start_date, end_date=ff_end_date,
-                      timezone=my_timezone, replace_existing=True)
+ #   if daily_waiver:
+  #      sched.add_job(bot_main, 'cron', ['get_waiver_report'], id='waiver_report',
+  #                    day_of_week='wed, tue, thu, fri, sat, sun', hour=12, minute=35, start_date=ff_start_date, end_date=ff_end_date,
+  #                    timezone=my_timezone, replace_existing=True)
 
-    sched.add_job(bot_main, 'cron', ['get_matchups'], id='matchups',
-                  day_of_week='wed', hour=12, minute=35, start_date=ff_start_date, end_date=ff_end_date,
-                  timezone=game_timezone, replace_existing=True)
-    sched.add_job(bot_main, 'cron', ['get_scoreboard_short'], id='scoreboard1',
-                  day_of_week='fri,wed', hour=12, minute=35, start_date=ff_start_date, end_date=ff_end_date,
-                  timezone=my_timezone, replace_existing=True)
+  #  sched.add_job(bot_main, 'cron', ['get_matchups'], id='matchups',
+     #             day_of_week='mon', hour=9, minute=00, start_date=ff_start_date, end_date=ff_end_date,
+      #            timezone=game_timezone, replace_existing=True)
+   # sched.add_job(bot_main, 'cron', ['get_scoreboard_short'], id='scoreboard1',
+  #                day_of_week='fri,wed', hour=12, minute=35, start_date=ff_start_date, end_date=ff_end_date,
+    #              timezone=my_timezone, replace_existing=True)
 
   #  if monitor_report:
   #      sched.add_job(bot_main, 'cron', ['get_monitor'], id='monitor',
   #                  day_of_week='sun', hour=7, minute=30, start_date=ff_start_date, end_date=ff_end_date,
   #                  timezone=my_timezone, replace_existing=True)
 
-    sched.add_job(bot_main, 'cron', ['get_scoreboard_short'], id='scoreboard2',
-                  day_of_week='wed', hour='12,13', start_date=ff_start_date, end_date=ff_end_date,
-                  timezone=game_timezone, replace_existing=True)
+   
+   # sched.add_job(bot_main, 'cron', ['get_scoreboard_short'], id='scoreboard2',
+  #                day_of_week='wed', hour='12,13', start_date=ff_start_date, end_date=ff_end_date,
+  #                timezone=game_timezone, replace_existing=True)
 
     print("Ready!")
     sched.start()
